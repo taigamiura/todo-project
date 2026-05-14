@@ -1,0 +1,439 @@
+openapi: 3.1.0
+info:
+  title: Todo Platform BFF API
+  version: 1.0.0
+  description: |
+    Frontend が直接利用する公開 API。
+    contract test ではこの定義を Prism で mock して DB なしで利用できる。
+servers:
+  - url: http://localhost:8080
+tags:
+  - name: Health
+  - name: Auth
+  - name: Todos
+paths:
+  /healthz:
+    get:
+      tags: [Health]
+      operationId: getHealth
+      responses:
+        "200":
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+              example:
+                status: ok
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+  /v1/auth/signup:
+    post:
+      tags: [Auth]
+      operationId: signup
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SignupRequest"
+            examples:
+              default:
+                value:
+                  name: Taro Todo
+                  email: taro@example.com
+                  password: password123
+      responses:
+        "201":
+          description: Signup succeeded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SessionResponse"
+              example:
+                accessToken: mock-access-token
+                user:
+                  id: user-1
+                  name: Taro Todo
+                  email: taro@example.com
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "502":
+          $ref: "#/components/responses/BadGateway"
+  /v1/auth/login:
+    post:
+      tags: [Auth]
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+            examples:
+              default:
+                value:
+                  email: taro@example.com
+                  password: password123
+      responses:
+        "200":
+          description: Login succeeded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SessionResponse"
+              example:
+                accessToken: mock-access-token
+                user:
+                  id: user-1
+                  name: Taro Todo
+                  email: taro@example.com
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "502":
+          $ref: "#/components/responses/BadGateway"
+  /v1/todos:
+    get:
+      tags: [Todos]
+      operationId: listTodos
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Todo list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TodoListResponse"
+              example:
+                todos:
+                  - id: todo-1
+                    title: Buy milk
+                    description: 2 liters
+                    completed: false
+                    createdAt: "2026-05-11T00:00:00Z"
+                    updatedAt: "2026-05-11T00:00:00Z"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+    post:
+      tags: [Todos]
+      operationId: createTodo
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TodoInput"
+            examples:
+              default:
+                value:
+                  title: Buy milk
+                  description: 2 liters
+                  completed: false
+      responses:
+        "201":
+          description: Todo created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TodoResponse"
+              example:
+                todo:
+                  id: todo-1
+                  title: Buy milk
+                  description: 2 liters
+                  completed: false
+                  createdAt: "2026-05-11T00:00:00Z"
+                  updatedAt: "2026-05-11T00:00:00Z"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+  /v1/todos/{id}:
+    parameters:
+      - $ref: "#/components/parameters/TodoId"
+    get:
+      tags: [Todos]
+      operationId: getTodo
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Todo detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TodoResponse"
+              example:
+                todo:
+                  id: todo-1
+                  title: Buy milk
+                  description: 2 liters
+                  completed: false
+                  createdAt: "2026-05-11T00:00:00Z"
+                  updatedAt: "2026-05-11T00:00:00Z"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+    patch:
+      tags: [Todos]
+      operationId: updateTodo
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TodoInput"
+      responses:
+        "200":
+          description: Todo updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TodoResponse"
+              example:
+                todo:
+                  id: todo-1
+                  title: Buy milk
+                  description: 2 liters
+                  completed: false
+                  createdAt: "2026-05-11T00:00:00Z"
+                  updatedAt: "2026-05-11T00:00:00Z"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    delete:
+      tags: [Todos]
+      operationId: deleteTodo
+      security:
+        - bearerAuth: []
+      responses:
+        "204":
+          description: Todo deleted
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "502":
+          $ref: "#/components/responses/BadGateway"
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    TodoId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+      example: todo-1
+  responses:
+    BadRequest:
+      description: Invalid input
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            error:
+              code: BAD_REQUEST
+              message: 入力値が不正です。
+              status: 400
+    Unauthorized:
+      description: Authentication required
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            error:
+              code: AUTH_REQUIRED
+              message: 認証が必要です。
+              status: 401
+    Conflict:
+      description: Resource conflict
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            error:
+              code: USER_EMAIL_CONFLICT
+              message: このメールアドレスはすでに登録されています。
+              status: 409
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            error:
+              code: TODO_NOT_FOUND
+              message: Todo が見つかりません。
+              status: 404
+    InternalServerError:
+      description: Server side failure
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            error:
+              code: INTERNAL_SERVER_ERROR
+              message: internal server error
+              status: 500
+    ServiceUnavailable:
+      description: Dependency unavailable
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            error:
+              code: REDIS_UNAVAILABLE
+              message: redis is unavailable
+              status: 503
+    BadGateway:
+      description: Upstream failure
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            error:
+              code: BAD_GATEWAY
+              message: upstream service is unavailable
+              status: 502
+  schemas:
+    HealthResponse:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          examples: [ok]
+    ErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message, status]
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            status:
+              type: integer
+    User:
+      type: object
+      required: [id, name, email]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+    SignupRequest:
+      type: object
+      required: [name, email, password]
+      properties:
+        name:
+          type: string
+          minLength: 1
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+    SessionResponse:
+      type: object
+      required: [accessToken, user]
+      properties:
+        accessToken:
+          type: string
+        user:
+          $ref: "#/components/schemas/User"
+    TodoInput:
+      type: object
+      required: [title]
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 50
+        description:
+          type: string
+          maxLength: 300
+          default: ""
+        completed:
+          type: boolean
+          default: false
+    Todo:
+      type: object
+      required: [id, title, description, completed, createdAt, updatedAt]
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        completed:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    TodoListResponse:
+      type: object
+      required: [todos]
+      properties:
+        todos:
+          type: array
+          items:
+            $ref: "#/components/schemas/Todo"
+    TodoResponse:
+      type: object
+      required: [todo]
+      properties:
+        todo:
+          $ref: "#/components/schemas/Todo"

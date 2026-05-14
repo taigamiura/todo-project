@@ -1,0 +1,258 @@
+{
+    "annotations": {
+        "list": [
+            {
+                "builtIn": 1,
+                "datasource": {
+                    "type": "grafana",
+                    "uid": "-- Grafana --"
+                },
+                "enable": true,
+                "hide": true,
+                "iconColor": "rgba(0, 211, 255, 1)",
+                "name": "Annotations & Alerts",
+                "type": "dashboard"
+            }
+        ]
+    },
+    "editable": false,
+    "fiscalYearStartMonth": 0,
+    "graphTooltip": 1,
+    "id": null,
+    "links": [],
+    "panels": [
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "palette-classic"
+                    },
+                    "unit": "reqps"
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 0,
+                "y": 0
+            },
+            "id": 1,
+            "options": {
+                "legend": {
+                    "calcs": [],
+                    "displayMode": "table",
+                    "placement": "bottom"
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "none"
+                }
+            },
+            "targets": [
+                {
+                    "expr": "sum(rate(todo_platform_bff_http_requests_total[5m]))",
+                    "legendFormat": "bff",
+                    "refId": "A"
+                },
+                {
+                    "expr": "sum(rate(todo_platform_user_service_http_requests_total[5m]))",
+                    "legendFormat": "user-service",
+                    "refId": "B"
+                },
+                {
+                    "expr": "sum(rate(todo_platform_todo_service_http_requests_total[5m]))",
+                    "legendFormat": "todo-service",
+                    "refId": "C"
+                }
+            ],
+            "title": "Request Rate",
+            "type": "timeseries"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "palette-classic"
+                    },
+                    "unit": "percentunit"
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 12,
+                "y": 0
+            },
+            "id": 2,
+            "options": {
+                "legend": {
+                    "calcs": [],
+                    "displayMode": "table",
+                    "placement": "bottom"
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "none"
+                }
+            },
+            "targets": [
+                {
+                    "expr": "sum(rate(todo_platform_bff_http_requests_total{status!~\"OK|Created|No Content\"}[5m])) / clamp_min(sum(rate(todo_platform_bff_http_requests_total[5m])), 0.001)",
+                    "legendFormat": "bff",
+                    "refId": "A"
+                },
+                {
+                    "expr": "sum(rate(todo_platform_user_service_http_requests_total{status!~\"OK|Created|No Content\"}[5m])) / clamp_min(sum(rate(todo_platform_user_service_http_requests_total[5m])), 0.001)",
+                    "legendFormat": "user-service",
+                    "refId": "B"
+                },
+                {
+                    "expr": "sum(rate(todo_platform_todo_service_http_requests_total{status!~\"OK|Created|No Content\"}[5m])) / clamp_min(sum(rate(todo_platform_todo_service_http_requests_total[5m])), 0.001)",
+                    "legendFormat": "todo-service",
+                    "refId": "C"
+                }
+            ],
+            "title": "Error Rate",
+            "type": "timeseries"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "palette-classic"
+                    },
+                    "unit": "s"
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 0,
+                "y": 8
+            },
+            "id": 3,
+            "options": {
+                "legend": {
+                    "calcs": [],
+                    "displayMode": "table",
+                    "placement": "bottom"
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "none"
+                }
+            },
+            "targets": [
+                {
+                    "expr": "histogram_quantile(0.95, sum(rate(todo_platform_bff_http_request_duration_seconds_bucket[5m])) by (le))",
+                    "legendFormat": "bff p95",
+                    "refId": "A"
+                },
+                {
+                    "expr": "histogram_quantile(0.95, sum(rate(todo_platform_user_service_http_request_duration_seconds_bucket[5m])) by (le))",
+                    "legendFormat": "user-service p95",
+                    "refId": "B"
+                },
+                {
+                    "expr": "histogram_quantile(0.95, sum(rate(todo_platform_todo_service_http_request_duration_seconds_bucket[5m])) by (le))",
+                    "legendFormat": "todo-service p95",
+                    "refId": "C"
+                }
+            ],
+            "title": "P95 Latency",
+            "type": "timeseries"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "palette-classic"
+                    },
+                    "unit": "short"
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 12,
+                "y": 8
+            },
+            "id": 4,
+            "options": {
+                "legend": {
+                    "calcs": [],
+                    "displayMode": "table",
+                    "placement": "bottom"
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "none"
+                }
+            },
+            "targets": [
+                {
+                    "expr": "nginx_connections_active",
+                    "legendFormat": "active",
+                    "refId": "A"
+                },
+                {
+                    "expr": "nginx_connections_waiting",
+                    "legendFormat": "waiting",
+                    "refId": "B"
+                },
+                {
+                    "expr": "nginx_connections_reading",
+                    "legendFormat": "reading",
+                    "refId": "C"
+                },
+                {
+                    "expr": "nginx_connections_writing",
+                    "legendFormat": "writing",
+                    "refId": "D"
+                }
+            ],
+            "title": "Nginx Connections",
+            "type": "timeseries"
+        }
+    ],
+    "preload": false,
+    "refresh": "30s",
+    "schemaVersion": 39,
+    "tags": [
+        "todo-platform",
+        "observability"
+    ],
+    "templating": {
+        "list": []
+    },
+    "time": {
+        "from": "now-30m",
+        "to": "now"
+    },
+    "timepicker": {},
+    "timezone": "browser",
+    "title": "Todo Platform Overview",
+    "uid": "todo-platform-overview",
+    "version": 1,
+    "weekStart": ""
+}

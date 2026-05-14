@@ -1,0 +1,351 @@
+openapi: 3.1.0
+info:
+  title: Todo Platform Todo Service API
+  version: 1.0.0
+  description: BFF からのみ呼ばれる internal todo API。
+servers:
+  - url: http://localhost:8082
+tags:
+  - name: Health
+  - name: Todos
+paths:
+  /healthz:
+    get:
+      tags: [Health]
+      operationId: getTodoServiceHealth
+      responses:
+        "200":
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+              example:
+                status: ok
+        "503":
+          description: Database unavailable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error:
+                  code: DATABASE_UNAVAILABLE
+                  message: database is unavailable
+                  status: 503
+  /internal/todos/:
+    get:
+      tags: [Todos]
+      operationId: listInternalTodos
+      parameters:
+        - $ref: "#/components/parameters/UserIdHeader"
+      responses:
+        "200":
+          description: Todo list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TodoListResponse"
+              example:
+                todos:
+                  - id: todo-1
+                    title: Buy milk
+                    description: 2 liters
+                    completed: false
+                    createdAt: "2026-05-11T00:00:00Z"
+                    updatedAt: "2026-05-11T00:00:00Z"
+        "401":
+          description: Missing user context
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error:
+                  code: AUTH_CONTEXT_MISSING
+                  message: missing user context
+                  status: 401
+        "500":
+          description: Failed to load todos
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error:
+                  code: TODO_LIST_FAILED
+                  message: failed to load todos
+                  status: 500
+    post:
+      tags: [Todos]
+      operationId: createInternalTodo
+      parameters:
+        - $ref: "#/components/parameters/UserIdHeader"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TodoInput"
+      responses:
+        "201":
+          description: Todo created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TodoResponse"
+              example:
+                todo:
+                  id: todo-1
+                  title: Buy milk
+                  description: 2 liters
+                  completed: false
+                  createdAt: "2026-05-11T00:00:00Z"
+                  updatedAt: "2026-05-11T00:00:00Z"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error:
+                  code: VALIDATION_FAILED
+                  message: タイトルは必須です。
+                  status: 400
+        "401":
+          description: Missing user context
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error:
+                  code: AUTH_CONTEXT_MISSING
+                  message: missing user context
+                  status: 401
+        "500":
+          description: Create failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error:
+                  code: TODO_CREATE_FAILED
+                  message: failed to create todo
+                  status: 500
+  /internal/todos/{id}/:
+    parameters:
+      - $ref: "#/components/parameters/TodoId"
+      - $ref: "#/components/parameters/UserIdHeader"
+    get:
+      tags: [Todos]
+      operationId: getInternalTodo
+      responses:
+        "200":
+          description: Todo detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TodoResponse"
+              example:
+                todo:
+                  id: todo-1
+                  title: Buy milk
+                  description: 2 liters
+                  completed: false
+                  createdAt: "2026-05-11T00:00:00Z"
+                  updatedAt: "2026-05-11T00:00:00Z"
+        "404":
+          description: Todo not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error:
+                  code: TODO_NOT_FOUND
+                  message: Todo が見つかりません。
+                  status: 404
+        "500":
+          description: Unexpected server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error:
+                  code: TODO_FETCH_FAILED
+                  message: failed to load todo
+                  status: 500
+    patch:
+      tags: [Todos]
+      operationId: updateInternalTodo
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TodoInput"
+      responses:
+        "200":
+          description: Todo updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TodoResponse"
+              example:
+                todo:
+                  id: todo-1
+                  title: Buy milk
+                  description: 2 liters
+                  completed: false
+                  createdAt: "2026-05-11T00:00:00Z"
+                  updatedAt: "2026-05-11T00:00:00Z"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error:
+                  code: VALIDATION_FAILED
+                  message: タイトルは必須です。
+                  status: 400
+        "401":
+          description: Missing user context
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error:
+                  code: AUTH_CONTEXT_MISSING
+                  message: missing user context
+                  status: 401
+        "404":
+          description: Todo not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error:
+                  code: TODO_NOT_FOUND
+                  message: Todo が見つかりません。
+                  status: 404
+    delete:
+      tags: [Todos]
+      operationId: deleteInternalTodo
+      responses:
+        "204":
+          description: Todo deleted
+        "404":
+          description: Todo not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error:
+                  code: TODO_NOT_FOUND
+                  message: Todo が見つかりません。
+                  status: 404
+        "500":
+          description: Delete failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error:
+                  code: TODO_DELETE_FAILED
+                  message: failed to delete todo
+                  status: 500
+components:
+  parameters:
+    TodoId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+      example: todo-1
+    UserIdHeader:
+      name: X-User-ID
+      in: header
+      required: true
+      schema:
+        type: string
+      example: user-1
+  schemas:
+    HealthResponse:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          examples: [ok]
+    ErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message, status]
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            status:
+              type: integer
+    TodoInput:
+      type: object
+      required: [title]
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 50
+        description:
+          type: string
+          maxLength: 300
+          default: ""
+        completed:
+          type: boolean
+          default: false
+    Todo:
+      type: object
+      required: [id, title, description, completed, createdAt, updatedAt]
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        completed:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    TodoListResponse:
+      type: object
+      required: [todos]
+      properties:
+        todos:
+          type: array
+          items:
+            $ref: "#/components/schemas/Todo"
+    TodoResponse:
+      type: object
+      required: [todo]
+      properties:
+        todo:
+          $ref: "#/components/schemas/Todo"

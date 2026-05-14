@@ -1,0 +1,208 @@
+openapi: 3.1.0
+info:
+  title: Todo Platform User Service API
+  version: 1.0.0
+  description: BFF からのみ呼ばれる internal user API。
+servers:
+  - url: http://localhost:8081
+tags:
+  - name: Health
+  - name: Users
+paths:
+  /healthz:
+    get:
+      tags: [Health]
+      operationId: getUserServiceHealth
+      responses:
+        "200":
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+              example:
+                status: ok
+        "503":
+          description: Database unavailable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error:
+                  code: DATABASE_UNAVAILABLE
+                  message: database is unavailable
+                  status: 503
+  /internal/users/signup:
+    post:
+      tags: [Users]
+      operationId: signupInternalUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SignupRequest"
+      responses:
+        "201":
+          description: User created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserResponse"
+              example:
+                user:
+                  id: user-1
+                  name: Taro Todo
+                  email: taro@example.com
+        "400":
+          description: Validation failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error:
+                  code: VALIDATION_FAILED
+                  message: validation
+                  status: 400
+        "409":
+          description: Duplicate email
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error:
+                  code: USER_EMAIL_CONFLICT
+                  message: このメールアドレスはすでに登録されています。
+                  status: 409
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error:
+                  code: USER_CREATE_FAILED
+                  message: user creation failed
+                  status: 500
+  /internal/users/login:
+    post:
+      tags: [Users]
+      operationId: loginInternalUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: User authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserResponse"
+              example:
+                user:
+                  id: user-1
+                  name: Taro Todo
+                  email: taro@example.com
+        "400":
+          description: Validation failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error:
+                  code: VALIDATION_FAILED
+                  message: validation
+                  status: 400
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error:
+                  code: AUTH_INVALID_CREDENTIALS
+                  message: メールアドレスまたはパスワードが正しくありません。
+                  status: 401
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error:
+                  code: AUTHENTICATION_FAILED
+                  message: authentication failed
+                  status: 500
+components:
+  schemas:
+    HealthResponse:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          examples: [ok]
+    ErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message, status]
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            status:
+              type: integer
+    User:
+      type: object
+      required: [id, name, email]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+    UserResponse:
+      type: object
+      required: [user]
+      properties:
+        user:
+          $ref: "#/components/schemas/User"
+    SignupRequest:
+      type: object
+      required: [name, email, password]
+      properties:
+        name:
+          type: string
+          minLength: 1
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8

@@ -1,0 +1,113 @@
+name: Container Security
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/container-security.yml
+      - .trivyignore
+      - README.md
+      - bff/**
+      - user-service/**
+      - todo-service/**
+      - todo-app/**
+      - nginx/**
+  pull_request:
+    paths:
+      - .github/workflows/container-security.yml
+      - .trivyignore
+      - README.md
+      - bff/**
+      - user-service/**
+      - todo-service/**
+      - todo-app/**
+      - nginx/**
+
+permissions:
+  contents: read
+  security-events: write
+
+concurrency:
+  group: container-security-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  trivy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        image:
+          - name: nginx
+            dockerfile: nginx/Dockerfile
+            context: nginx
+            tag: local/nginx:${{ github.sha }}
+          - name: bff
+            dockerfile: bff/Dockerfile
+            context: bff
+            tag: local/bff:${{ github.sha }}
+          - name: user-service
+            dockerfile: user-service/Dockerfile
+            context: user-service
+            tag: local/user-service:${{ github.sha }}
+          - name: todo-service
+            dockerfile: todo-service/Dockerfile
+            context: todo-service
+            tag: local/todo-service:${{ github.sha }}
+          - name: todo-app
+            dockerfile: todo-app/Dockerfile
+            context: todo-app
+            tag: local/todo-app:${{ github.sha }}
+
+    name: Trivy ${{ matrix.image.name }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build image
+        run: |
+          docker build \
+            --file "${{ matrix.image.dockerfile }}" \
+            --tag "${{ matrix.image.tag }}" \
+            "${{ matrix.image.context }}"
+
+      - name: Generate SARIF report
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          scan-type: image
+          image-ref: ${{ matrix.image.tag }}
+          format: sarif
+          output: trivy-${{ matrix.image.name }}.sarif
+          severity: HIGH,CRITICAL
+          trivyignores: .trivyignore
+          vuln-type: os,library
+          scanners: vuln
+          limit-severities-for-sarif: true
+          exit-code: 0
+
+      - name: Upload SARIF report
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: trivy-${{ matrix.image.name }}.sarif
+          category: trivy-${{ matrix.image.name }}
+
+      - name: Enforce HIGH and CRITICAL policy
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          scan-type: image
+          image-ref: ${{ matrix.image.tag }}
+          format: table
+          severity: HIGH,CRITICAL
+          trivyignores: .trivyignore
+          vuln-type: os,library
+          scanners: vuln
+          skip-setup-trivy: true
+          exit-code: 1

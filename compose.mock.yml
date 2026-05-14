@@ -1,0 +1,90 @@
+services:
+  bff-mock:
+    image: stoplight/prism:5
+    command:
+      - mock
+      - -m
+      - "false"
+      - -h
+      - 0.0.0.0
+      - -p
+      - "8080"
+      - /tmp/openapi/bff.yaml
+    volumes:
+      - ./openapi:/tmp/openapi:ro
+    ports:
+      - "127.0.0.1:8080:8080"
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:8080/healthz').then((response) => process.exit(response.ok ? 0 : 1)).catch(() => process.exit(1))",
+        ]
+      interval: 2s
+      timeout: 2s
+      retries: 30
+
+  user-service-mock:
+    image: stoplight/prism:5
+    command:
+      - mock
+      - -m
+      - "false"
+      - -h
+      - 0.0.0.0
+      - -p
+      - "8081"
+      - /tmp/openapi/user-service.yaml
+    volumes:
+      - ./openapi:/tmp/openapi:ro
+    ports:
+      - "127.0.0.1:8081:8081"
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:8081/healthz').then((response) => process.exit(response.ok ? 0 : 1)).catch(() => process.exit(1))",
+        ]
+      interval: 2s
+      timeout: 2s
+      retries: 30
+
+  todo-service-mock:
+    image: stoplight/prism:5
+    command:
+      - mock
+      - -m
+      - "false"
+      - -h
+      - 0.0.0.0
+      - -p
+      - "8082"
+      - /tmp/openapi/todo-service.yaml
+    volumes:
+      - ./openapi:/tmp/openapi:ro
+    ports:
+      - "127.0.0.1:8082:8082"
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:8082/healthz').then((response) => process.exit(response.ok ? 0 : 1)).catch(() => process.exit(1))",
+        ]
+      interval: 2s
+      timeout: 2s
+      retries: 30

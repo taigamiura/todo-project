@@ -1,0 +1,52 @@
+name: BFF CI
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - master
+    paths:
+      - .github/workflows/bff-ci.yml
+      - bff/**
+      - openapi/bff.yaml
+      - openapi/user-service.yaml
+      - openapi/todo-service.yaml
+  pull_request:
+    paths:
+      - .github/workflows/bff-ci.yml
+      - bff/**
+      - openapi/bff.yaml
+      - openapi/user-service.yaml
+      - openapi/todo-service.yaml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: bff-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: bff
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: bff/go.mod
+          cache-dependency-path: bff/go.sum
+
+      - name: Test
+        run: go test ./...
+
+      - name: Build
+        run: go build ./...

@@ -1,0 +1,64 @@
+groups:
+  - name: todo-platform-latency
+    rules:
+      - alert: BffHighLatencyP95
+        expr: histogram_quantile(0.95, sum(rate(todo_platform_bff_http_request_duration_seconds_bucket[5m])) by (le)) > 0.75
+        for: 10m
+        labels:
+          severity: warning
+          service: bff
+        annotations:
+          summary: BFF の p95 latency が高い状態です
+          description: 直近 10 分で BFF の p95 latency が 750ms を超えています。
+
+      - alert: UserServiceHighLatencyP95
+        expr: histogram_quantile(0.95, sum(rate(todo_platform_user_service_http_request_duration_seconds_bucket[5m])) by (le)) > 0.5
+        for: 10m
+        labels:
+          severity: warning
+          service: user-service
+        annotations:
+          summary: user-service の p95 latency が高い状態です
+          description: 直近 10 分で user-service の p95 latency が 500ms を超えています。
+
+      - alert: TodoServiceHighLatencyP95
+        expr: histogram_quantile(0.95, sum(rate(todo_platform_todo_service_http_request_duration_seconds_bucket[5m])) by (le)) > 0.5
+        for: 10m
+        labels:
+          severity: warning
+          service: todo-service
+        annotations:
+          summary: todo-service の p95 latency が高い状態です
+          description: 直近 10 分で todo-service の p95 latency が 500ms を超えています。
+
+  - name: todo-platform-errors
+    rules:
+      - alert: BffHighErrorRate
+        expr: sum(rate(todo_platform_bff_http_requests_total{status!~"OK|Created|No Content"}[5m])) / clamp_min(sum(rate(todo_platform_bff_http_requests_total[5m])), 0.001) > 0.05
+        for: 10m
+        labels:
+          severity: critical
+          service: bff
+        annotations:
+          summary: BFF の error rate が高い状態です
+          description: 直近 10 分で BFF の 5xx/4xx 相当レスポンス率が 5% を超えています。
+
+      - alert: UserServiceHighErrorRate
+        expr: sum(rate(todo_platform_user_service_http_requests_total{status!~"OK|Created|No Content"}[5m])) / clamp_min(sum(rate(todo_platform_user_service_http_requests_total[5m])), 0.001) > 0.05
+        for: 10m
+        labels:
+          severity: critical
+          service: user-service
+        annotations:
+          summary: user-service の error rate が高い状態です
+          description: 直近 10 分で user-service のエラーレスポンス率が 5% を超えています。
+
+      - alert: TodoServiceHighErrorRate
+        expr: sum(rate(todo_platform_todo_service_http_requests_total{status!~"OK|Created|No Content"}[5m])) / clamp_min(sum(rate(todo_platform_todo_service_http_requests_total[5m])), 0.001) > 0.05
+        for: 10m
+        labels:
+          severity: critical
+          service: todo-service
+        annotations:
+          summary: todo-service の error rate が高い状態です
+          description: 直近 10 分で todo-service のエラーレスポンス率が 5% を超えています。

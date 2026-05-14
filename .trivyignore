@@ -1,0 +1,18 @@
+# Trivy ignore file
+#
+# Rule:
+# - Ignore only when the vulnerability is understood and temporarily accepted.
+# - Every ignored item must have a matching review note in a PR, issue, or security log.
+# - Prefer fixing the base image or dependency before adding anything here.
+#
+# Template:
+# CVE-2099-0001
+#
+# Suggested review note to keep with the ignore:
+# - Image: todo-app
+# - Package: example-package
+# - Reason: No fix is available yet and the vulnerable code path is not used in this image.
+# - Review by: 2026-06-30
+# - Tracking issue: #123
+#
+# Add real CVE or advisory IDs below this line.
