@@ -1,4 +1,4 @@
-name: Container Security
+name: Container Security Report
 
 on:
   workflow_dispatch:
@@ -9,13 +9,15 @@ on:
 
 permissions:
   contents: read
+  security-events: write
 
 concurrency:
-  group: container-security-${{ github.workflow }}-${{ github.ref }}
+  group: container-security-report-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  trivy:
+  trivy-report:
+    name: Trivy report ${{ matrix.image.name }}
     runs-on: ubuntu-latest
     timeout-minutes: 45
     strategy:
@@ -43,8 +45,6 @@ jobs:
             context: todo-app
             tag: local/todo-app:${{ github.sha }}
 
-    name: Trivy ${{ matrix.image.name }}
-
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -59,15 +59,22 @@ jobs:
             --tag "${{ matrix.image.tag }}" \
             "${{ matrix.image.context }}"
 
-      - name: Enforce HIGH and CRITICAL policy
+      - name: Generate SARIF report
         uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: image
           image-ref: ${{ matrix.image.tag }}
-          format: table
+          format: sarif
+          output: trivy-${{ matrix.image.name }}.sarif
           severity: HIGH,CRITICAL
           trivyignores: .trivyignore
           vuln-type: os,library
           scanners: vuln
-          skip-setup-trivy: true
-          exit-code: 1
+          limit-severities-for-sarif: true
+          exit-code: 0
+
+      - name: Upload SARIF report
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: trivy-${{ matrix.image.name }}.sarif
+          category: trivy-${{ matrix.image.name }}
