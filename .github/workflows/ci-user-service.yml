@@ -5,16 +5,7 @@ on:
   push:
     branches:
       - main
-      - master
-    paths:
-      - .github/workflows/user-service-ci.yml
-      - user-service/**
-      - openapi/user-service.yaml
   pull_request:
-    paths:
-      - .github/workflows/user-service-ci.yml
-      - user-service/**
-      - openapi/user-service.yaml
 
 permissions:
   contents: read
@@ -25,6 +16,7 @@ concurrency:
 
 jobs:
   test-build:
+    name: User Service test-build
     runs-on: ubuntu-latest
     timeout-minutes: 15
     defaults:
@@ -33,10 +25,10 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version-file: user-service/go.mod
           cache-dependency-path: user-service/go.sum

@@ -16,3 +16,5 @@
 # - Tracking issue: #123
 #
 # Add real CVE or advisory IDs below this line.
+# next 16.2.6 の vendored picomatch が原因、stable 修正版待ち
+CVE-2026-33671
