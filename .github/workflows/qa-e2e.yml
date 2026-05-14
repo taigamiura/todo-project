@@ -6,7 +6,7 @@ on:
     branches:
       - main
     paths:
-      - .github/workflows/e2e.yml
+      - .github/workflows/qa-e2e.yml
       - compose.yml
       - compose.mock.yml
       - nginx/**
@@ -18,7 +18,7 @@ on:
       - openapi/**
   pull_request:
     paths:
-      - .github/workflows/e2e.yml
+      - .github/workflows/qa-e2e.yml
       - compose.yml
       - compose.mock.yml
       - nginx/**
