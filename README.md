@@ -79,7 +79,8 @@ docker compose -f compose.mock.yml up bff-mock
 
 ## Container Security
 
-- GitHub Actions では [container-security.yml](.github/workflows/container-security.yml) が `nginx`, `bff`, `user-service`, `todo-service`, `todo-app` のイメージを build して Trivy で scan します。
+- GitHub Actions では [security-container-enforce.yml](.github/workflows/security-container-enforce.yml) が `nginx`, `bff`, `user-service`, `todo-service`, `todo-app` のイメージを対象に Trivy の report job と enforce job を実行します。
+- report job は SARIF を GitHub code scanning に upload し、enforce job は `HIGH` と `CRITICAL` の脆弱性を検出したら CI を fail させます。
 - CI では `HIGH` と `CRITICAL` の脆弱性を fail 条件にしています。
 - SARIF レポートは GitHub の code scanning に upload されるため、PR と Security タブの両方で確認できます。
 - 一時的に除外が必要な場合だけ [.trivyignore](.trivyignore) を使ってください。
@@ -87,9 +88,9 @@ docker compose -f compose.mock.yml up bff-mock
 ### Trivy Flow
 
 1. workflow が対象イメージを build します。
-2. Trivy が `HIGH,CRITICAL` を scan して SARIF を出力します。
-3. SARIF を GitHub に upload します。
-4. 同じ条件で再度 table scan し、`HIGH,CRITICAL` が残っていれば workflow を fail させます。
+2. [security-container-enforce.yml](.github/workflows/security-container-enforce.yml) の report job が `HIGH,CRITICAL` を scan して SARIF を出力し、GitHub に upload します。
+3. 同じ workflow の enforce job が同じ条件で table scan します。
+4. `HIGH,CRITICAL` が残っていれば required check を fail させます。
 
 ### Ignore Policy
 
