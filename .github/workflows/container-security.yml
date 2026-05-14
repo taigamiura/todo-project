@@ -69,5 +69,4 @@ jobs:
           trivyignores: .trivyignore
           vuln-type: os,library
           scanners: vuln
-          skip-setup-trivy: true
           exit-code: 1
