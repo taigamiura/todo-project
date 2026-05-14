@@ -47,15 +47,19 @@ jobs:
         uses: actions/setup-go@v6
         with:
           go-version: '1.25'
+          cache: false
 
       - name: Build Go modules
         if: matrix.language == 'go'
         run: |
+          GOCACHE="$(mktemp -d)"
+          export GOCACHE
+
           for dir in bff user-service todo-service; do
             echo "Building $dir"
             (
               cd "$dir"
-              go build ./...
+              go build -a ./...
             )
           done
 
