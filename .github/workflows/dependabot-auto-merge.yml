@@ -1,0 +1,86 @@
+name: Dependabot Auto Merge
+
+on:
+  pull_request_target:
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - ready_for_review
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: dependabot-auto-merge-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  auto-merge:
+    if: github.actor == 'dependabot[bot]' && github.event.pull_request.base.ref == 'main' && github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Auto approve Dependabot PR
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const pull_number = context.payload.pull_request.number;
+
+            const reviews = await github.paginate(github.rest.pulls.listReviews, {
+              owner,
+              repo,
+              pull_number,
+            });
+
+            const alreadyApproved = reviews.some((review) => {
+              return review.user?.login === 'github-actions[bot]' && review.state === 'APPROVED';
+            });
+
+            if (alreadyApproved) {
+              core.info('Dependabot PR is already approved by github-actions[bot].');
+              return;
+            }
+
+            await github.rest.pulls.createReview({
+              owner,
+              repo,
+              pull_number,
+              event: 'APPROVE',
+              body: 'Auto-approved for Dependabot. Auto-merge will proceed after required checks pass.',
+            });
+
+      - name: Enable auto-merge
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+
+            if (pr.auto_merge) {
+              core.info('Auto-merge is already enabled for this PR.');
+              return;
+            }
+
+            await github.graphql(
+              `mutation EnableAutoMerge($pullRequestId: ID!) {
+                enablePullRequestAutoMerge(input: {
+                  pullRequestId: $pullRequestId,
+                  mergeMethod: SQUASH
+                }) {
+                  pullRequest {
+                    number
+                    autoMergeRequest {
+                      enabledAt
+                    }
+                  }
+                }
+              }`,
+              {
+                pullRequestId: pr.node_id,
+              }
+            );
+
+            core.info(`Enabled auto-merge for PR #${pr.number}.`);
